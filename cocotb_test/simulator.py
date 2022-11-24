@@ -45,6 +45,8 @@ class Simulator(object):
         defines=None,
         parameters=None,
         compile_args=None,
+        vhdl_compile_args=None,
+        verilog_compile_args=None,
         sim_args=None,
         extra_args=None,
         plus_args=None,
@@ -120,6 +122,16 @@ class Simulator(object):
 
         if compile_args is None:
             compile_args = []
+
+        if verilog_compile_args is None:
+            self.verilog_compile_args = []
+        else:
+            self.verilog_compile_args = verilog_compile_args
+
+        if vhdl_compile_args is None:
+            self.vhdl_compile_args = []
+        else:
+            self.vhdl_compile_args = vhdl_compile_args
 
         if extra_args is None:
             extra_args = []
@@ -423,21 +435,23 @@ class Questa(Simulator):
         cmd = []
 
         if self.vhdl_sources:
+            compile_args = self.compile_args + self.vhdl_compile_args
             do_script = "vlib {RTL_LIBRARY}; vcom -mixedsvvh {FORCE} -work {RTL_LIBRARY} {EXTRA_ARGS} {VHDL_SOURCES}; quit".format(
                 RTL_LIBRARY=as_tcl_value(self.rtl_library),
                 VHDL_SOURCES=" ".join(as_tcl_value(v) for v in self.vhdl_sources),
-                EXTRA_ARGS=" ".join(as_tcl_value(v) for v in self.compile_args),
+                EXTRA_ARGS=" ".join(as_tcl_value(v) for v in compile_args),
                 FORCE= "" if self.force_compile else "-incr",
             )
             cmd.append(["vsim"] + ["-c"] + ["-do"] + [do_script])
 
         if self.verilog_sources:
+            compile_args = self.compile_args + self.verilog_compile_args
             do_script = "vlib {RTL_LIBRARY}; vlog -mixedsvvh {FORCE} -work {RTL_LIBRARY} +define+COCOTB_SIM -sv {DEFINES} {INCDIR} {EXTRA_ARGS} {VERILOG_SOURCES}; quit".format(
                 RTL_LIBRARY=as_tcl_value(self.rtl_library),
                 VERILOG_SOURCES=" ".join(as_tcl_value(v) for v in self.verilog_sources),
                 DEFINES=" ".join(self.get_define_commands(self.defines)),
                 INCDIR=" ".join(self.get_include_commands(self.includes)),
-                EXTRA_ARGS=" ".join(as_tcl_value(v) for v in self.compile_args),
+                EXTRA_ARGS=" ".join(as_tcl_value(v) for v in compile_args),
                 FORCE= "" if self.force_compile else "-incr",
             )
             cmd.append(["vsim"] + ["-c"] + ["-do"] + [do_script])
