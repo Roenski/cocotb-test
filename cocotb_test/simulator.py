@@ -544,7 +544,7 @@ class Questa(Simulator):
     def do_script(self):
         do_script = ""
         if self.waves:
-            do_script += "log -recursive /*;"
+            do_script += "log -recursive *;"
         if not self.gui:
             do_script += "run -all; quit"
         return do_script
